@@ -131,10 +131,6 @@ var artist = {
         if (isNaN(avg)) {return 0};
         return (avg).toFixed(1);
     },
-    /*getColor: function(n) {
-        let p = Number(n/10)
-        return (335-160*p+", "+530*p+", 100");
-    },*/
     getColor: function(n) {
         return ((300-2.4*(n)**2)+", "+(10*n**2+5*n)+", 0");
     },
@@ -326,7 +322,11 @@ var album = {
         nameField.focus();
     },
     add: function(name, artistIndex, rating, year) {
-        if (!name || artistIndex === undefined || !rating || !year) {return};
+        if (!name || (!artistIndex && artistIndex !== 0) || !rating || !year) {return};
+        console.log(name);
+        console.log(artistIndex);
+        console.log(rating);
+        console.log(year);
         artist.closeCreation();
 
         if (typeof rating === "string" && rating.includes(",")) {
