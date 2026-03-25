@@ -322,7 +322,7 @@ var album = {
         nameField.focus();
     },
     add: function(name, artistIndex, rating, year) {
-        if (!name || (!artistIndex && artistIndex !== 0) || !rating || !year) {return};
+        if (!name || (!artistIndex && artistIndex !== 0) || !rating || !(typeof rating === "number") || !year || !(typeof year === "number")) {return};
         console.log(name);
         console.log(artistIndex);
         console.log(rating);
