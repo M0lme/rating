@@ -324,7 +324,7 @@ var album = {
     add: function(name, artistIndex, rating, year) {
         rating = Number(rating);
         year = Number(year);
-        if (!name || (!artistIndex && artistIndex !== 0) || !rating || !(typeof rating === "number") || !year || !(typeof year === "number")) {return};
+        if (!name || !(artistIndex && artistIndex !== 0) || !rating || !(typeof rating === "number") || !year || !(typeof year === "number")) {return};
         artist.closeCreation();
 
         if (typeof rating === "string" && rating.includes(",")) {
