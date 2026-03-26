@@ -1,3 +1,5 @@
+var developerMode = false;
+
 var artist = {
     drawType: "default",
     drawTypeOrder: "descending",
@@ -300,21 +302,25 @@ var album = {
         e.appendChild(creationUI);
 
         saveButton.addEventListener("click", () => {
+            if (developerMode) {console.log("Click")}
             let name = nameField.value;
             let artistIndex = artistField.value;
-            let rating = ratingField.value;
-            let year = yearField.value;
+            let rating = Number(ratingField.value);
+            let year = Number(yearField.value);
             if (index != undefined && type == undefined) {album.edit(index, name, artistIndex, rating, year); return;}
+            if (developerMode) {console.log("album.add called")}
             album.add(name, artistIndex, rating, year);
         })
 
         saveButton.addEventListener("keydown", (e) => {
             if (e.key == "Enter") {
+                if (developerMode) {console.log("Enter")}
                 let name = nameField.value;
                 let artistIndex = artistField.value;
-                let rating = ratingField.value;
-                let year = yearField.value;
+                let rating = Number(ratingField.value);
+                let year = Number(yearField.value);
                 if (index != undefined && type == undefined) {album.edit(index, name, artistIndex, rating, year); return;}
+                if (developerMode) {console.log("album.add called")}
                 album.add(name, artistIndex, rating, year);
             }
         })
@@ -322,8 +328,16 @@ var album = {
         nameField.focus();
     },
     add: function(name, artistIndex, rating, year) {
-        rating = Number(rating);
-        year = Number(year);
+        if (developerMode) {
+            console.log("album.add()");
+            console.log(!name)
+            console.log(!(artistIndex && artistIndex !== 0))
+            console.log(!rating)
+            console.log(!(typeof rating === "number"))
+            console.log(!year)
+            console.log(!(typeof year === "number"))
+        }
+
         if (!name || !(artistIndex && artistIndex !== 0) || !rating || !(typeof rating === "number") || !year || !(typeof year === "number")) {return};
         artist.closeCreation();
 
@@ -873,6 +887,7 @@ function getCharIndex(str, char) {
 
 function savePage() {
     var pageSave = {
+        developerMode: developerMode,
         artistName: artist.name,
         artistOpen: artist.open,
 
@@ -899,6 +914,7 @@ function loadPage() {
         //        XXX[i] = savedPage.XXX[i];
         //    }
         //}
+        if (typeof savedPage.developerMode !== "undefined") developerMode = savedPage.developerMode;
 
         if (typeof savedPage.artistName !== "undefined") {
             for ( let i = 0; i < savedPage.artistName.length; i++) {
