@@ -131,7 +131,7 @@ var artist = {
         }
         let avg = sum/artist.getNumberOfAlbums(index);
         if (isNaN(avg)) {return 0};
-        return (avg).toFixed(1);
+        return Number((avg).toFixed(1));
     },
     getColor: function(n) {
         return ((300-2.4*(n)**2)+", "+(10*n**2+5*n)+", 0");
@@ -155,6 +155,7 @@ var artist = {
         display.updateSectionMiddle();
     },
     getDrawOrder: function(type) {
+        if (developerMode) {console.log("artist.getDrawOrder()", type, artist.drawTypeOrder)}
         let drawOrder = [];
         let reference = [];
 
@@ -169,10 +170,12 @@ var artist = {
                 reference.push(artist.getAverageRating(i))
             }
         }
+        if (developerMode) {console.log("reference, unsorted", reference)}
         let artistReference;
         artistReference = reference.slice(0);
 
-        reference.sort((x,y) => x > y);
+        reference = reference.toSorted((x,y) => x > y);
+        if (developerMode) {console.log("reference, sorted", reference)}
 
         for (let i = 0; i < reference.length; i++) {
             for (let a = 0; a < artistReference.length; a++) {
@@ -185,6 +188,7 @@ var artist = {
         }
         if (artist.drawTypeOrder == "descending" && (type == "albums" || type == "rating")) {drawOrder.reverse()}
         if (artist.drawTypeOrder == "ascending" && type == "name") {drawOrder.reverse()}
+        if (developerMode) {console.log(drawOrder)}
         return drawOrder;
     },
     switchDrawOrder: function(type) {
@@ -305,8 +309,8 @@ var album = {
             if (developerMode) {console.log("Click")}
             let name = nameField.value;
             let artistIndex = artistField.value;
-            let rating = Number(ratingField.value);
-            let year = Number(yearField.value);
+            let rating = ratingField.value;
+            let year = yearField.value;
             if (index != undefined && type == undefined) {album.edit(index, name, artistIndex, rating, year); return;}
             if (developerMode) {console.log("album.add called")}
             album.add(name, artistIndex, rating, year);
@@ -317,8 +321,8 @@ var album = {
                 if (developerMode) {console.log("Enter")}
                 let name = nameField.value;
                 let artistIndex = artistField.value;
-                let rating = Number(ratingField.value);
-                let year = Number(yearField.value);
+                let rating = ratingField.value;
+                let year = yearField.value;
                 if (index != undefined && type == undefined) {album.edit(index, name, artistIndex, rating, year); return;}
                 if (developerMode) {console.log("album.add called")}
                 album.add(name, artistIndex, rating, year);
@@ -328,24 +332,28 @@ var album = {
         nameField.focus();
     },
     add: function(name, artistIndex, rating, year) {
-        if (developerMode) {
-            console.log("album.add()");
-            console.log(!name)
-            console.log(!(artistIndex && artistIndex !== 0))
-            console.log(!rating)
-            console.log(!(typeof rating === "number"))
-            console.log(!year)
-            console.log(!(typeof year === "number"))
-        }
-
-        if (!name || !(artistIndex && artistIndex !== 0) || !rating || !(typeof rating === "number") || !year || !(typeof year === "number")) {return};
-        artist.closeCreation();
 
         if (typeof rating === "string" && rating.includes(",")) {
             let i = getCharIndex(rating, ",");
             rating = replaceChar(rating, i, ".")
-            rating = Number(rating);
         }
+        rating = Number(rating);
+
+        let nameClause = (name != undefined && name !== "");
+        let artistClause = (artistIndex !== "" && (artistIndex != undefined || artistIndex === 0));
+        let ratingClause = (rating !== "" && typeof rating === "number" && !isNaN(rating)) || rating === "0";
+        let yearClause = (year !== "" && typeof Number(year) === "number" && !isNaN(year));
+
+        if (developerMode) {
+            console.log("album.add() " + name);
+            console.log("nameClause ", nameClause, name)
+            console.log("artistClause ", artistClause, artistIndex)
+            console.log("ratingClause ", ratingClause, rating)
+            console.log("yearClause ", yearClause, year)
+        }
+
+        if (!nameClause || !artistClause || !ratingClause || !yearClause) {return};
+        artist.closeCreation();
 
         album.name.push(name);
         album.artistIndex.push(artistIndex);
@@ -483,6 +491,12 @@ var display = {
         let upperSection = document.createElement("div");
         upperSection.id = "artist-container-bar";
 
+        let sortInfo = document.createElement("div");
+        sortInfo.innerHTML = "Sort by:"
+        sortInfo.style.fontSize = "10px";
+        sortInfo.style.left = "5px";
+        sortInfo.classList.add("button-sort");
+
         let artistNameButton = document.createElement("div");
         artistNameButton.classList.add("button-sort");
         artistNameButton.innerHTML = "Name"
@@ -513,6 +527,7 @@ var display = {
             artist.switchDrawOrder("rating");
         })
 
+        upperSection.appendChild(sortInfo);
         upperSection.appendChild(artistNameButton);
         upperSection.appendChild(artistAlbumsButton);
         upperSection.appendChild(artistRatingButton);
@@ -566,7 +581,7 @@ var display = {
 
             let ratingContainer = document.createElement("div");
             ratingContainer.classList.add("container-artist-info")
-            ratingContainer.innerHTML = artist.getAverageRating(i);
+            ratingContainer.innerHTML = artist.getAverageRating(i).toFixed(1);
             ratingContainer.style.color = "rgb("+artist.getColor(Number(artist.getAverageRating(i)))+")";
             ratingContainer.style.position = "absolute";
             ratingContainer.style.left = "80.7%";
@@ -733,13 +748,13 @@ var display = {
 
         let header = document.createElement("div");
         header.classList.add("header-left");
-        header.innerHTML = "Import"
+        header.innerHTML = "Import & Export"
         header.style.height = "10%";
 
         let inputField = document.createElement("input");
         inputField.classList.add("field-import-input");
         inputField.type = "text";
-        inputField.placeholder = "paste your list";
+        inputField.placeholder = "paste your list or leave empty to export";
 
         let previewButton = document.createElement("div");
         previewButton.classList.add("button-preview-import");
@@ -750,12 +765,32 @@ var display = {
         addButton.innerHTML = "Add";
         addButton.style.left = "80%";
 
+        let typeSelector = document.createElement("select");
+        typeSelector.classList.add("field-type-select", "button-preview-import");
+        typeSelector.name = "type";
+
+        let option1 = document.createElement("option");
+        option1.value = 1;
+        option1.innerHTML = "Molme";
+        let option2 = document.createElement("option");
+        option2.value = 2;
+        option2.innerHTML = "A & V";
+
+        typeSelector.appendChild(option1);
+        typeSelector.appendChild(option2);
+
         let previewContainer = document.createElement("div");
         previewContainer.id = "container-preview-import";
 
-        previewButton.addEventListener("click", () => {
-            let text = inputField.value;
-            display.updatePreview(text);
+        let clearButton = document.createElement("div");
+        clearButton.classList.add("button-preview-import");
+        clearButton.innerHTML = "🗑";
+        clearButton.style.left = "5%";
+        clearButton.style.lineHeight = "20px";
+        clearButton.style.fontSize = "30px";
+        clearButton.addEventListener("click", () => {
+            inputField.value = '';
+            previewContainer.innerHTML = '';
         })
 
         addButton.addEventListener("click", () => {
@@ -769,36 +804,61 @@ var display = {
             display.updateSectionRight("import");
         })
 
-        e.appendChild(header)
+        e.appendChild(header);
         e.appendChild(inputField);
         e.appendChild(previewButton);
-        e.appendChild(addButton)
+        e.appendChild(addButton);
+        e.appendChild(typeSelector);
+        e.appendChild(clearButton);
         e.appendChild(previewContainer);
+
+        previewButton.addEventListener("click", () => {
+            let text = inputField.value;
+            let type = Number(typeSelector.value);
+            if (text !== "") {display.updateImportPreview(text, type); return}
+            else {display.updateExportPreview();} 
+        })
     },
-    updatePreview: function(text) {
+    updateImportPreview: function(text, type) {
+        if (developerMode) {console.log(type, typeof type)};
         let e = document.getElementById("container-preview-import");
         e.innerHTML = '';
         let textClump = "";
+        let artistCutOff;
+        let albumCutOff;
 
         for (let i = 0; i < text.length+1; i++) {
-            if (text[i-1] === ":" || (text[i-1] === "0" && text[i-2] === "1" && text[i-3] === "/")) {
-                if (textClump[0] === " ") {textClump = removeChar(textClump, 0)};
-                if (textClump[textClump.length-1] === " ") {textClump = removeChar(textClump, textClump.length-1)};
-                if (text[i-1] === ":") {
+            if (developerMode) {console.log(textClump)}
+            if (type === 1) {
+                artistCutOff = text[i-1] === ":";
+                albumCutOff = text[i-1] === "0" && text[i-2] === "1" && text[i-3] === "/";
+            } else if (type === 2) {
+                artistCutOff = text[i] === " " && text[i-1] === " " && !(text[i-4] === ":" || text[i-5] === ":" || text[i-6] === ":");
+                albumCutOff = (text[i] === " " && text[i-1] !== " " && (text[i-3] === ":" || text[i-4] === ":" || text[i-5] === ":")) || text[i] === undefined;
+            }
+            if (artistCutOff || albumCutOff) {
+                if (artistCutOff) {
+                    if (developerMode) {console.log("artistCutOff")}
                     let previewArtist = document.createElement("div")
                     previewArtist.classList.add("artist-preview");
+                    while (textClump[0] === " ") {
+                        textClump = removeChar(textClump, 0);
+                    }
                     previewArtist.innerHTML = removeChar(textClump, textClump.length-1);
 
                     e.appendChild(previewArtist);
-                } else if (text[i-1] === "0" && text[i-2] === "1" && text[i-3] === "/") {
+                } else if (albumCutOff) {
+                    if (developerMode) {console.log("albumCutOff")}
                     let previewAlbum = document.createElement("div")
                     previewAlbum.classList.add("album-preview");
                     let previewRating = "";
                     
-                    while (textClump[textClump.length-1] !== "/") {
+                    if (type === 1) {
+                        while (textClump[textClump.length-1] !== "/") {
+                            textClump = removeChar(textClump, textClump.length-1);
+                        }
                         textClump = removeChar(textClump, textClump.length-1);
                     }
-                    textClump = removeChar(textClump, textClump.length-1);
 
                     while (textClump[textClump.length-1] !== " ") {
                         previewRating+=textClump[textClump.length-1]
@@ -806,9 +866,16 @@ var display = {
                     }
                     previewRating = reverseString(previewRating);
 
-                    for (let a = 0; a < 3; a++) {
+                    if (type === 1) {
+                        for (let a = 0; a < 3; a++) {
+                            textClump = removeChar(textClump, textClump.length-1);
+                        }
+                    } else if (type === 2) {
                         textClump = removeChar(textClump, textClump.length-1);
+                        textClump = removeChar(textClump, textClump.length-1);
+                        textClump = removeChar(textClump, 0);
                     }
+
                     for (let a = 0; a < previewRating.length; a++) {
                         if (previewRating[a] === ",") {
                             previewRating = replaceChar(previewRating, a, ".")
@@ -833,6 +900,20 @@ var display = {
             }
             textClump += text[i];
         }
+    },
+    updateExportPreview: function() {
+        let previewContainer = document.getElementById("container-preview-import");
+        let exportText = "";
+        for (let i = 0; i < artist.name.length; i++) {
+            exportText += artist.name[i] + ":" + '<br>';
+            for (let a = 0; a < album.name.length; a++) {
+                if (album.artistIndex[a] === i) {
+                    exportText += album.name[a] + " - " + album.rating[a] + "/10" + '<br>';
+                }
+            }
+            exportText += '<br>';
+        }
+        previewContainer.innerHTML += exportText;
     },
     updateFilter: function() {
         let e = document.getElementById("section-right");
@@ -961,7 +1042,7 @@ window.onload = () => {
     display.updateUpperBar();
     display.updateStatistics();
     display.updateSectionMiddle();
-    display.updateSectionRight("filter");
+    display.updateSectionRight("import");
 }
 
 document.addEventListener("keydown", (e) => {
