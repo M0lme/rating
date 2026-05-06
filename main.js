@@ -1014,6 +1014,9 @@ var display = {
         let notesField = document.createElement("textarea");
         notesField.id = "field-notes";
         notesField.innerHTML = notes;
+        notesField.addEventListener("keyDown", () => {
+            notes = document.getElementById("field-notes").innerHTML;
+        })
 
         e.appendChild(header);
         e.appendChild(notesField);
@@ -1059,7 +1062,7 @@ function savePage() {
 
 setInterval(() => {
     savePage();
-}, 5000);
+}, 1000);
 
 function loadPage() {
     var savedPage = JSON.parse(localStorage.getItem("pageSave"));
