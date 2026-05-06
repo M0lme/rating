@@ -1,5 +1,6 @@
 var developerMode = false;
 
+var notes = "";
 var artist = {
     drawType: "default",
     drawTypeOrder: "descending",
@@ -468,8 +469,17 @@ var display = {
             display.updateSectionRight("filter");
         })
 
+        let notesMenuButton = document.createElement("div");
+        notesMenuButton.classList.add("button-new");
+        notesMenuButton.style.fontSize = "30px";
+        notesMenuButton.innerHTML = "📄";
+        notesMenuButton.addEventListener("click", () => {
+            display.updateSectionRight("notes");
+        })
+
         rightSection.appendChild(importMenuButton);
         rightSection.appendChild(filterMenuButton);
+        rightSection.appendChild(notesMenuButton);
 
         e.appendChild(leftSection)
         e.appendChild(middleSection)
@@ -784,6 +794,8 @@ var display = {
             display.updateImport();
         } else if (type == "filter") {
             display.updateFilter();
+        } else if (type == "notes") {
+            display.updateNotes();
         }
     },
     updateImport: function() {
@@ -989,6 +1001,22 @@ var display = {
         e.appendChild(header);
         e.appendChild(searchArtistField);
         e.appendChild(searchAlbumField);
+    },
+    updateNotes: function() {
+        let e = document.getElementById("section-right");
+        e.innerHTML = '';
+
+        let header = document.createElement("div");
+        header.classList.add("header-left");
+        header.innerHTML = "Notes"
+        header.style.height = "10%";
+
+        let notesField = document.createElement("textarea");
+        notesField.id = "field-notes";
+        notesField.innerHTML = notes;
+
+        e.appendChild(header);
+        e.appendChild(notesField);
     }
 }
 
@@ -1016,6 +1044,7 @@ function getRandomInt(max) {
 
 function savePage() {
     var pageSave = {
+        savedNotes: notes,
         developerMode: developerMode,
         artistName: artist.name,
         artistOpen: artist.open,
@@ -1037,6 +1066,7 @@ function loadPage() {
 
     if (localStorage.getItem("pageSave") !== null) {
         //if (typeof savedPage.XXX !== "undefined") XXX = savedPage.XXX;
+        if (typeof savedPage.savedNotes !== "undefined") notes = savedPage.savedNotes;
 
         //if (typeof savedPage.XXX !== "undefined") {
         //    for ( let i = 0; i < savedPage.XXX.length; i++) {
