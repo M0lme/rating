@@ -1014,7 +1014,7 @@ var display = {
         let notesField = document.createElement("textarea");
         notesField.id = "field-notes";
         notesField.innerHTML = notes;
-        notesField.addEventListener("keyDown", () => {
+        notesField.addEventListener("keydown", () => {
             notes = document.getElementById("field-notes").value;
         })
 
