@@ -482,6 +482,50 @@ var display = {
         e.innerHTML += "Total Artists: " + artist.name.length;
         e.innerHTML += '<br>'
         e.innerHTML += "Total Albums: " + album.name.length;
+
+        let albumAmountChart = document.createElement("canvas");
+        let ctx = albumAmountChart.getContext("2d");
+
+        let albumAmounts = [];
+        for (let i = 0; i < artist.name.length; i++) {
+            albumAmounts.push(artist.getNumberOfAlbums(i))
+        }
+        albumAmounts = albumAmounts.toSorted((x,y) => x > y);
+        let uniqueAmounts = [...new Set(albumAmounts)]
+        let previousAngle = 0;
+
+        e.appendChild(albumAmountChart);
+        for (let i = 0; i < uniqueAmounts.length; i++) {
+            let countTrue = 0;
+            for (let I = 0; I < artist.name.length; I++) {
+                if (artist.getNumberOfAlbums(I) === uniqueAmounts[i]) {
+                    countTrue++;
+                }
+            }
+            console.log(countTrue, uniqueAmounts[i])
+            
+            let percentage = countTrue/artist.name.length;
+            console.log(percentage, uniqueAmounts[i])
+
+            let red = 255*Math.sin(Math.PI*i/uniqueAmounts.length+0);
+            let green = 255*Math.sin(Math.PI*i/uniqueAmounts.length+1);
+            let blue = 255*Math.sin(Math.PI*i/uniqueAmounts.length+2.2);
+
+
+            ctx.beginPath();
+            ctx.arc(95, 80, 35, previousAngle, 2 * Math.PI * percentage + previousAngle);
+            ctx.strokeStyle = "rgb("+red+","+green+","+blue+")";
+            ctx.lineWidth = 70;
+            ctx.stroke();
+            previousAngle = previousAngle + 2 * Math.PI * percentage;
+
+            let textElement = document.createElement("div");
+            textElement.style.color = "rgb("+red+","+green+","+blue+")";
+            textElement.style.textShadow = "0 0 5px black";
+            textElement.innerHTML = uniqueAmounts[i] + " albums, " + countTrue + " artists";
+
+            e.appendChild(textElement)
+        }
     },
     updateSectionMiddle: function() {
         if (document.getElementById("container-artist") !== undefined && document.getElementById("container-artist") !== null) {display.scroll = document.getElementById("container-artist").scrollTop};
@@ -964,6 +1008,10 @@ function getCharIndex(str, char) {
     for (let i = 0; i < str.length; i++) {
         if (str[i] === char) {return i}
     }
+}
+
+function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
 }
 
 function savePage() {
