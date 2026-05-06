@@ -1015,7 +1015,7 @@ var display = {
         notesField.id = "field-notes";
         notesField.innerHTML = notes;
         notesField.addEventListener("keyDown", () => {
-            notes = document.getElementById("field-notes").innerHTML;
+            notes = document.getElementById("field-notes").value;
         })
 
         e.appendChild(header);
