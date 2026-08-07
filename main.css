@@ -98,10 +98,10 @@
 
 #head-bar {
     position: absolute;
-    left: 20%;
+    left: 22%;
     top: 1%;
 
-    width: 60%;
+    width: 56%;
     height: 10%;
 
     background-color: #909090;
@@ -144,6 +144,8 @@
     width: 20%;
     height: 90%;
 
+    overflow-y: scroll;
+
     background-color: #999999;
 }
 
@@ -180,32 +182,8 @@
 }
 
 .button-new {
-    position: relative;
-    float: left;
-    margin: 4px;
-
-    width: 50px;
-    height: 50px;
-
-    background-color: #BBBBBB;
-
-    font-size: 60px;
-    text-align: center;
-    line-height: 50px;
-    color: white;
-    text-shadow: 0 0 5px black;
-
-    user-select: none;
-
-    outline: solid #444444 1px;
-}
-
-.button-new:hover {
-    transform: scale(1.1);
-}
-
-.button-new:active {
-    transform: scale(1);
+    width: 14% !important;
+    margin: 2% !important;
 }
 
 #header-middle {
@@ -242,6 +220,23 @@
 
     color: white;
     text-shadow: 0 0 4px black, 0 0 4px black;
+
+    z-index: 8;
+}
+
+#screen-container-artist {
+    position: absolute;
+    left: 2%;
+    top: 8%;
+    
+    width: 96%;
+    height: 90%;
+
+    box-shadow: inset 0px 20px 8px -10px #606060,
+        inset 0px -20px 8px -10px #606060;
+    pointer-events: none;
+
+    z-index: 12;
 }
 
 #artist-container-bar {
@@ -274,6 +269,10 @@
 
 .button-sort:hover {
     transform: scale(1.05);
+    text-shadow: 0 0 6px black;
+}
+.button-sort:active {
+    transform: scale(1.03);
     text-shadow: 0 0 6px black;
 }
 
@@ -374,7 +373,7 @@
 
 .button-toggle-all {
     position: absolute;
-    right: 8%;
+    right: 5%;
     
     width: 10%;
     height: 22px;
@@ -390,6 +389,31 @@
     text-shadow: 0 0 6px black;
 
     background-color: #808080;
+}
+
+.button-add-new {
+    position: relative;
+    float: left;
+
+    width: 5%;
+    aspect-ratio: 1;
+
+    margin: 0.8%;
+
+    background-size: cover;
+    image-rendering: pixelated;
+}
+
+.button-add-new:hover {
+    transform: scale(1.05);
+}
+
+.button-add-new:active {
+    transform: scale(1);
+}
+
+.button-add-new-right {
+    float: right;
 }
 
 .button-toggle-all:hover {
@@ -529,4 +553,13 @@
     background: none;
     outline: solid black 1px;
     border: none;
+}
+
+.option-close {
+    position: absolute;
+    left: 92%;
+    top: 70%;
+
+    width: 10px;
+    height: 10px;
 }
