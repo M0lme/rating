@@ -1,103 +1,36 @@
 var developerMode = false;
 
 var notes = "";
+var openRight = "import";
+
 var artist = {
     drawType: "default",
     drawTypeOrder: "descending",
     name: [],
     open: [],
 
-    new: function(index) {
-        document.getElementById("wrapper-main").style.filter = "blur(4px)";
-        let e = document.getElementById("screen-creation")
-        e.style.display = "block";
-        e.innerHTML = '';
-
-        let creationUI = document.createElement("div");
-        creationUI.id = "UI-creation";
-
-        let UItitle = document.createElement("div");
-        UItitle.classList.add("title-UI-creation");
-        UItitle.innerHTML = "Add a new artist";
-
-        let saveButton = document.createElement("div");
-        saveButton.classList.add("button-UI-creation");
-        saveButton.tabIndex = "0";
-        saveButton.innerHTML = "Save";
-        saveButton.style.left = "3%";
-        saveButton.tabIndex = "0";
-
-        let closeButton = document.createElement("div");
-        closeButton.classList.add("button-UI-creation");
-        closeButton.innerHTML = "Close";
-        closeButton.style.right = "3%";
-        closeButton.addEventListener("click", () => {
-            artist.closeCreation();
-        })
-
-        let nameField = document.createElement("input");
-        nameField.classList.add("field-UI-creation");
-        nameField.type = "text";
-        nameField.placeholder = "Insert artist name";
-        if (index != undefined) {
-            nameField.placeholder = artist.name[index];
-        }
-
-        creationUI.appendChild(UItitle);
-        creationUI.appendChild(saveButton);
-        creationUI.appendChild(closeButton);
-        creationUI.appendChild(nameField);
-
-        e.appendChild(creationUI);
-
-        saveButton.addEventListener("click", () => {
-            let name = nameField.value;
-            if (index != undefined) {artist.edit(index, name); return;};
-            artist.add(name);
-        })
-
-        saveButton.addEventListener("keydown", (event) => {
-            if (event.key == "Enter") {
-                let name = nameField.value;
-                if (index != undefined) {artist.edit(index, name); return;};
-                artist.add(name);
-            }
-        })
-
-        nameField.addEventListener("keydown", (event) => {
-            if (event.key == "Enter") {saveButton.focus()}
-        })
-
-        nameField.focus();
-    },
-    closeCreation: function() {
-        let e = document.getElementById("screen-creation");
-        e.innerHTML = '';
-        e.style.display = "none";
-        document.getElementById("wrapper-main").style.filter = "none";
-    },
     add: function(name) {
-        let countTrue = 0;
-        for (let i = 0; i < artist.name.length; i++) {
-            if (name == artist.name[i]) {countTrue += 1;}
-        }
-        if (!name || countTrue > 0) {return;}
-        artist.closeCreation();
+        if (!name || this.getNameExists(name)) {return;}
+        dispatchEvent(create.closeEvent);
 
         artist.name.push(name);
         artist.open.push(false);
 
         display.updateSectionMiddle();
     },
-    edit: function(index, name) {
-        let countTrue = 0;
-        for (let i = 0; i < artist.name.length; i++) {
-            if (name == artist.name[i]) {countTrue += 1;}
-        }
-        if (!name || countTrue > 0) {return;}
-        artist.closeCreation();
+    edit: function(name, index) {
+        if (!name || this.getNameExists(name)) {return;}
+        dispatchEvent(create.closeEvent);
+
         artist.name[index] = name
         display.updateSectionMiddle();
+    },
+    getNameExists: function(name) {
+        let countTrue = 0;
+        for (let i = 0; i < artist.name.length; i++) {
+            if (name == artist.name[i]) {countTrue++;}
+        }
+        return countTrue > 0;
     },
     toggleOpen: function(i) {
         if (artist.open[i]) {
@@ -106,13 +39,6 @@ var artist = {
             artist.open[i] = true;
         }
         display.updateSectionMiddle();
-    },
-    findIndex: function(name) {
-        for (let i = 0; i < artist.name.length; i++) {
-            if (name == artist.name[i]) {
-                return i;
-            }
-        }
     },
     getNumberOfAlbums: function(index) {
         let count = 0;
@@ -155,7 +81,8 @@ var artist = {
 
         display.updateSectionMiddle();
     },
-    getDrawOrder: function(type) {
+    getDrawOrder: function(type, order) {
+        if (order === undefined) {order = artist.drawTypeOrder}
         if (developerMode) {console.log("artist.getDrawOrder()", type, artist.drawTypeOrder)}
         let drawOrder = [];
         let reference = [];
@@ -187,8 +114,8 @@ var artist = {
                 }
             }
         }
-        if (artist.drawTypeOrder == "descending" && (type == "albums" || type == "rating")) {drawOrder.reverse()}
-        if (artist.drawTypeOrder == "ascending" && type == "name") {drawOrder.reverse()}
+        if (order == "descending" && (type == "albums" || type == "rating")) {drawOrder.reverse()}
+        if (order == "ascending" && type == "name") {drawOrder.reverse()}
         if (developerMode) {console.log(drawOrder)}
         return drawOrder;
     },
@@ -208,6 +135,35 @@ var artist = {
             }
         }
         display.updateSectionMiddle();
+    },
+    getGenreIndex: function(index) {
+        let mostUses = 0;
+        let mostUsedGenreIndex;
+        let tempGenres = [];
+        for (let i = 0; i < album.name.length; i++) {
+            if (album.artistIndex[i] === index) {
+                tempGenres.push(album.genreIndex[i])
+            }
+            console.log(tempGenres);
+        }
+        console.log(tempGenres)
+        let tempGenreAmounts = [];
+        for (let i = 0; i < tempGenres.length; i++) {
+            if (tempGenreAmounts[tempGenres[i]] === undefined) {
+                tempGenreAmounts.splice(tempGenres[i], 0, 1)
+            } else {
+                tempGenreAmounts[tempGenres[i]] += 1;
+            }
+        }
+        console.log(tempGenreAmounts);
+        for (let i = 0; i < tempGenreAmounts.length; i++) {
+            if (tempGenreAmounts[i] > mostUses) {
+                mostUses = tempGenreAmounts[i];
+                mostUsedGenreIndex = i;
+            }
+        }
+        console.log(mostUses);
+        return mostUsedGenreIndex;
     }
 }
 
@@ -216,161 +172,31 @@ var album = {
     artistIndex: [],
     rating: [],
     year: [],
+    genreIndex: [],
 
-    new: function(index, type) {
-        document.getElementById("wrapper-main").style.filter = "blur(4px)";
-        let e = document.getElementById("screen-creation")
-        e.style.display = "block";
-        e.innerHTML = '';
+    add: function(name, artistIndex, rating, year, genreIndex) {
+        rating = this.getConfirmedNumber(rating);
 
-        let creationUI = document.createElement("div");
-        creationUI.id = "UI-creation";
-        creationUI.style.width = "30%";
-        creationUI.style.left = "35%";
-
-
-        let UItitle = document.createElement("div");
-        UItitle.classList.add("title-UI-creation");
-        UItitle.innerHTML = "Add a new album";
-
-        let saveButton = document.createElement("div");
-        saveButton.classList.add("button-UI-creation");
-        saveButton.tabIndex = "0";
-        saveButton.innerHTML = "Save";
-        saveButton.style.left = "3%";
-
-        let closeButton = document.createElement("div");
-        closeButton.classList.add("button-UI-creation");
-        closeButton.innerHTML = "Close";
-        closeButton.style.right = "3%";
-        closeButton.addEventListener("click", () => {
-            artist.closeCreation();
-        })
-
-        let nameField = document.createElement("input");
-        nameField.classList.add("field-UI-creation")
-        nameField.type = "text";
-        nameField.placeholder = "Insert album name";
-        nameField.style.left = "10px";
-        nameField.style.top = "40px"
-        nameField.style.width = "40%";
-
-        let ratingField = document.createElement("input");
-        ratingField.classList.add("field-UI-creation")
-        ratingField.type = "text";
-        ratingField.placeholder = "Insert album rating";
-        ratingField.style.left = "10px";
-        ratingField.style.top = "65px"
-        ratingField.style.width = "40%";
-
-        let yearField = document.createElement("input");
-        yearField.classList.add("field-UI-creation")
-        yearField.type = "text";
-        yearField.placeholder = "Insert album year";
-        yearField.style.left = "10px";
-        yearField.style.top = "90px"
-        yearField.style.width = "40%";
-
-        let artistField = document.createElement("select");
-        artistField.classList.add("field-UI-creation");
-        artistField.name = "artists";
-        artistField.style.left = "260px";
-        artistField.style.top = "40px";
-        artistField.style.width = "40%";
-        artistField.innerHTML = "Select Artist";
-
-        for (let i = 0; i < artist.name.length; i++) {
-            let option = document.createElement("option");
-            option.value = i;
-            option.innerHTML = artist.name[i];
-            option.style.color = "white";
-
-            artistField.appendChild(option);
-        }
-        if (index != undefined && type == undefined) {
-            artistField.value = album.artistIndex[index]
-            nameField.value = album.name[index]
-            yearField.value = album.year[index]
-            ratingField.value = album.rating[index]
-        } else if (type == "new") {
-            artistField.value = index;
-        }
-        
-        creationUI.appendChild(artistField);
-        creationUI.appendChild(UItitle);
-        creationUI.appendChild(saveButton);
-        creationUI.appendChild(closeButton);
-        creationUI.appendChild(nameField);
-        creationUI.appendChild(ratingField);
-        creationUI.appendChild(yearField);
-
-        e.appendChild(creationUI);
-
-        saveButton.addEventListener("click", () => {
-            if (developerMode) {console.log("Click")}
-            let name = nameField.value;
-            let artistIndex = artistField.value;
-            let rating = ratingField.value;
-            let year = yearField.value;
-            if (index != undefined && type == undefined) {album.edit(index, name, artistIndex, rating, year); return;}
-            if (developerMode) {console.log("album.add called")}
-            album.add(name, artistIndex, rating, year);
-        })
-
-        saveButton.addEventListener("keydown", (e) => {
-            if (e.key == "Enter") {
-                if (developerMode) {console.log("Enter")}
-                let name = nameField.value;
-                let artistIndex = artistField.value;
-                let rating = ratingField.value;
-                let year = yearField.value;
-                if (index != undefined && type == undefined) {album.edit(index, name, artistIndex, rating, year); return;}
-                if (developerMode) {console.log("album.add called")}
-                album.add(name, artistIndex, rating, year);
-            }
-        })
-
-        nameField.focus();
-    },
-    add: function(name, artistIndex, rating, year) {
-
-        if (typeof rating === "string" && rating.includes(",")) {
-            let i = getCharIndex(rating, ",");
-            rating = replaceChar(rating, i, ".")
-        }
-        rating = Number(rating);
-
-        let nameClause = (name != undefined && name !== "");
-        let artistClause = (artistIndex !== "" && (artistIndex != undefined || artistIndex === 0));
-        let ratingClause = (rating !== "" && typeof rating === "number" && !isNaN(rating)) || rating === "0";
-        let yearClause = (year !== "" && typeof Number(year) === "number" && !isNaN(year));
-
-        if (developerMode) {
-            console.log("album.add() " + name);
-            console.log("nameClause ", nameClause, name)
-            console.log("artistClause ", artistClause, artistIndex)
-            console.log("ratingClause ", ratingClause, rating)
-            console.log("yearClause ", yearClause, year)
-        }
-
-        if (!nameClause || !artistClause || !ratingClause || !yearClause) {return};
-        artist.closeCreation();
+        if (this.getDeny(name, artistIndex, rating, year, genreIndex)) {return};
+        dispatchEvent(create.closeEvent);
 
         album.name.push(name);
-        album.artistIndex.push(artistIndex);
-        album.rating.push(rating);
-        album.year.push(year);
+        album.artistIndex.push(Number(artistIndex));
+        album.rating.push(Number(rating));
+        album.year.push(Number(year));
+        album.genreIndex.push(genreIndex);
 
         display.updateSectionMiddle();
     },
-    edit: function(i, name, artistIndex, rating, year) {
-        if (!name || !artistIndex || !rating || !year) {return};
-        artist.closeCreation();
+    edit: function(name, artistIndex, rating, year, genreIndex, i) {
+        if (this.getDeny(name, artistIndex, rating, year, genreIndex)) {return};
+        dispatchEvent(create.closeEvent);
 
         album.name[i] = name;
         album.artistIndex[i] = artistIndex;
         album.rating[i] = rating;
         album.year[i] = year;
+        album.genreIndex[i] = genreIndex;
 
         display.updateSectionMiddle();
     },
@@ -383,6 +209,208 @@ var album = {
 
         display.updateSectionMiddle();
     },
+    getDeny: function(name, artistIndex, rating, year, genreIndex) { // jos yksikin ehdoista on false, ei toimi
+        rating = this.getConfirmedNumber(rating);
+        let nameClause = (name != undefined && name !== "");
+        let artistClause = (artistIndex !== "" && (artistIndex != undefined || artistIndex === 0));
+        let ratingClause = (rating !== "" && typeof rating === "number" && !isNaN(rating)) || rating === "0";
+        let yearClause = (year !== "" && typeof Number(year) === "number" && !isNaN(year));
+        let genreClause = (genreIndex !== "" && (genreIndex != undefined || genreIndex === 0));
+
+
+        if (developerMode) {
+            console.log("album.getDeny() " + name);
+            console.log("nameClause ", nameClause, name)
+            console.log("artistClause ", artistClause, artistIndex)
+            console.log("ratingClause ", ratingClause, rating, "#1, rating !== empty string",(rating !== ""), ", #2, typeof rating === number", typeof rating === "number", ", #3, !isNaN(rating))", !isNaN(rating) )
+            console.log("yearClause ", yearClause, year)
+            console.log("genreClause ", genreClause, genreIndex)
+        }
+
+        return (!nameClause || !artistClause || !ratingClause || !yearClause || !genreClause);
+    },
+    getConfirmedNumber(nbr) {
+        if (typeof nbr === "string" && nbr.includes(",")) {
+            let i = getCharIndex(nbr, ",");
+            nbr = replaceChar(nbr, i, ".")
+        }
+        nbr = Number(nbr);
+        return nbr;
+    },
+}
+
+var genre = {
+    name: [
+        "default",
+    ],
+    open: [
+        true,
+    ],
+    add: function(name) {
+        if (!name) {return;}
+        create.close();
+
+        genre.name.push(name);
+        genre.open.push(true);
+
+        display.updateSectionMiddle();
+    },
+    edit: function(name, index) {
+        if (!name) {return;}
+        dispatchEvent(create.closeEvent);
+
+        genre.name[index] = name;
+        display.updateSectionMiddle();
+    },
+    getNumberOfAlbums: function(index) {
+        let count = 0;
+        for (let i = 0; i < album.name.length; i++) {
+            if (album.genreIndex === index) (count++)
+        }
+        return count;
+    }
+}
+
+var create = {
+    closeEvent: new CustomEvent('closeCreation'),
+    newElement: function(type, classAdd, innerHTMLAdd) {
+        let e = document.createElement(type);
+        if (classAdd !== undefined) {
+            e.classList.add(classAdd);
+        }
+        e.innerHTML = innerHTMLAdd;
+        return e;
+    },                                    // subject === "artist", "album", "genre"
+    new: function(subject, index, type) { // type === "add", "edit"
+        document.getElementById("wrapper-main").style.filter = "blur(4px)";
+        let e = document.getElementById("screen-creation")
+        e.style.display = "block";
+        e.innerHTML = '';
+
+        window.addEventListener('closeCreation', () => {
+            create.close();
+        })
+
+        let creationUI = document.createElement("div");
+        creationUI.id = "UI-creation";
+
+        let UItitle = create.newElement("div", "title-UI-creation", "Add a new ");
+        UItitle.innerHTML += subject;
+
+        let saveButton = create.newElement("div", "button-UI-creation", "Save");
+        saveButton.tabIndex = "0";
+        saveButton.style.left = "3%";
+
+        let closeButton = create.newElement("div", "button-UI-creation", "Close");
+        closeButton.style.right = "3%";
+        closeButton.addEventListener("click", () => {
+            dispatchEvent(create.closeEvent);
+        })
+
+        let nameField = create.newElement("input", "field-UI-creation", "")
+        nameField.type = "text";
+        nameField.placeholder = "Insert "+subject+" name";
+
+        let ratingField = create.newElement("input", "field-UI-creation", "")
+        ratingField.type = "text";
+        ratingField.placeholder = "Insert album rating";
+
+        let yearField = create.newElement("input", "field-UI-creation", "")
+        yearField.type = "text";
+        yearField.placeholder = "Insert album year";
+
+        let artistField = create.newElement("select", "field-UI-creation", "Select Artist")
+        artistField.name = "artists";
+
+        for (let i = 0; i < artist.name.length; i++) {
+            let option = document.createElement("option");
+            option.value = i;
+            option.innerHTML = artist.name[i];
+            option.style.color = "white";
+
+            artistField.appendChild(option);
+            if (developerMode) {console.log("artist option " + artist.name[i])}
+            if (developerMode) {console.log(artistField.children)}
+        }
+
+        let genreField = create.newElement("select", "field-UI-creation", "Select Genre");
+        genreField.name = "genres";
+
+        for (let i = 0; i < genre.name.length; i++) {
+            let option = document.createElement("option");
+            option.value = i;
+            option.innerHTML = genre.name[i];
+            option.style.color = "white";
+
+            genreField.appendChild(option);
+        }
+
+        creationUI.appendChild(UItitle);
+        creationUI.appendChild(saveButton);
+        creationUI.appendChild(closeButton);
+        creationUI.appendChild(nameField);
+
+        if (index !== undefined && type === "edit") {
+            nameField.value = window[subject].name[index];
+        }
+
+        if (subject === "album") {
+            creationUI.style.width = "30%";
+            creationUI.style.left = "35%";
+
+            nameField.style.left = "10px";
+            nameField.style.top = "40px"
+            nameField.style.width = "40%";
+
+            ratingField.style.left = "10px";
+            ratingField.style.top = "65px"
+            ratingField.style.width = "40%";
+
+            yearField.style.left = "10px";
+            yearField.style.top = "90px"
+            yearField.style.width = "40%";
+
+            artistField.style.left = "260px";
+            artistField.style.top = "40px";
+            artistField.style.width = "40%";
+
+            genreField.style.left = "260px";
+            genreField.style.top = "65px";
+            genreField.style.width = "40%";
+
+            creationUI.appendChild(ratingField);
+            creationUI.appendChild(yearField);
+            creationUI.appendChild(artistField);
+            creationUI.appendChild(genreField);
+
+            if (index !== undefined && type === "edit") {
+                ratingField.value = window[subject].rating[index];
+                yearField.value = window[subject].year[index];
+                artistField.value = window[subject].artistIndex[index];
+                genreField.value = window[subject].genreIndex[index];
+            }
+        }
+
+        e.appendChild(creationUI);
+
+        saveButton.addEventListener("click", () => {
+            if (subject === "artist") {
+                artist[type](nameField.value, index);
+            } else if (subject === "album") {
+                album[type](nameField.value, artistField.value, ratingField.value, yearField.value, genreField.value, index);
+            } else if (subject === "genre") {
+                genre[type](nameField.value, index);
+            }
+        })
+
+        nameField.focus();
+    },
+    close: function() {
+        let e = document.getElementById("screen-creation");
+        e.innerHTML = '';
+        e.style.display = "none";
+        document.getElementById("wrapper-main").style.filter = "none";
+    }
 }
 
 var display = {
@@ -408,32 +436,38 @@ var display = {
         middleSection.style.width = "56%";
 
         let newArtistButton = document.createElement("div");
-        newArtistButton.classList.add("button-new");
-        newArtistButton.innerHTML = "+";
+        newArtistButton.classList.add("button-add-new");
+        newArtistButton.style.backgroundImage = "url(images/artist-add.png)";
         newArtistButton.addEventListener("click", () => {
-            artist.new();
+            create.new("artist", undefined, "add");
         })
 
         let newAlbumButton = document.createElement("div");
-        newAlbumButton.classList.add("button-new");
-        newAlbumButton.innerHTML = "+";
-        newAlbumButton.style.float = "right";
+        newAlbumButton.classList.add("button-add-new");
+        newAlbumButton.style.backgroundImage = "url(images/album-add.png)";
         newAlbumButton.addEventListener("click", () => {
-            album.new();
+            create.new("album", undefined, "add");
+        })
+
+        let newGenreButton = document.createElement("div");
+        newGenreButton.classList.add("button-add-new");
+        newGenreButton.style.backgroundImage = "url(images/genre-add.png)";
+        newGenreButton.addEventListener("click", () => {
+            create.new("genre", undefined, "add");
         })
 
         let openAllButton = document.createElement("div");
-        openAllButton.classList.add("button-toggle-all");
-        openAllButton.innerHTML = "Open All";
-        openAllButton.style.marginTop = "3.8%";
+        openAllButton.classList.add("button-add-new");
+        openAllButton.classList.add("button-add-new-right");
+        openAllButton.style.backgroundImage = "url(images/open-all.png)";
         openAllButton.addEventListener("click", () => {
             artist.toggleAll("open");
         })
 
         let collapseAllButton = document.createElement("div");
-        collapseAllButton.classList.add("button-toggle-all");
-        collapseAllButton.innerHTML = "Close All";
-        collapseAllButton.style.marginTop = "0.3%";
+        collapseAllButton.classList.add("button-add-new");
+        collapseAllButton.classList.add("button-add-new-right");
+        collapseAllButton.style.backgroundImage = "url(images/close-all.png)";
         collapseAllButton.addEventListener("click", () => {
             artist.toggleAll("close");
         })
@@ -444,6 +478,7 @@ var display = {
 
         middleSection.appendChild(newArtistButton);
         middleSection.appendChild(newAlbumButton);
+        middleSection.appendChild(newGenreButton);
         middleSection.appendChild(middleHeader);
         middleSection.appendChild(openAllButton);
         middleSection.appendChild(collapseAllButton);
@@ -453,26 +488,25 @@ var display = {
         rightSection.style.width = "20.5%";
 
         let importMenuButton = document.createElement("div");
+        importMenuButton.classList.add("button-add-new");
         importMenuButton.classList.add("button-new");
-        importMenuButton.innerHTML = "↨";
-        importMenuButton.style.fontSize = "40px";
-        importMenuButton.style.lineHeight = "35px";
+        importMenuButton.style.backgroundImage = "url(images/import.png)"
         importMenuButton.addEventListener("click", () => {
             display.updateSectionRight("import");
         })
 
         let filterMenuButton = document.createElement("div");
+        filterMenuButton.classList.add("button-add-new");
         filterMenuButton.classList.add("button-new");
-        filterMenuButton.style.fontSize = "30px";
-        filterMenuButton.innerHTML = "🔍︎";
+        filterMenuButton.style.backgroundImage = "url(images/search.png)"
         filterMenuButton.addEventListener("click", () => {
             display.updateSectionRight("filter");
         })
 
         let notesMenuButton = document.createElement("div");
         notesMenuButton.classList.add("button-new");
-        notesMenuButton.style.fontSize = "30px";
-        notesMenuButton.innerHTML = "📄";
+        notesMenuButton.classList.add("button-add-new");
+        notesMenuButton.style.backgroundImage = "url(images/notes.png)"
         notesMenuButton.addEventListener("click", () => {
             display.updateSectionRight("notes");
         })
@@ -496,31 +530,18 @@ var display = {
         let albumAmountChart = document.createElement("canvas");
         let ctx = albumAmountChart.getContext("2d");
 
-        let albumAmounts = [];
-        for (let i = 0; i < artist.name.length; i++) {
-            albumAmounts.push(artist.getNumberOfAlbums(i))
-        }
-        albumAmounts = albumAmounts.toSorted((x,y) => x > y);
-        let uniqueAmounts = [...new Set(albumAmounts)]
+        let lista = artist.getDrawOrder("albums", "descending");
+
         let previousAngle = 0;
 
         e.appendChild(albumAmountChart);
-        for (let i = 0; i < uniqueAmounts.length; i++) {
-            let countTrue = 0;
-            for (let I = 0; I < artist.name.length; I++) {
-                if (artist.getNumberOfAlbums(I) === uniqueAmounts[i]) {
-                    countTrue++;
-                }
-            }
-            console.log(countTrue, uniqueAmounts[i])
+        for (let i = 0; i < lista.length; i++) {
             
-            let percentage = countTrue/artist.name.length;
-            console.log(percentage, uniqueAmounts[i])
+            let percentage = artist.getNumberOfAlbums(lista[i])/album.name.length;
 
-            let red = 255*Math.sin(Math.PI*i/uniqueAmounts.length+0);
-            let green = 255*Math.sin(Math.PI*i/uniqueAmounts.length+1);
-            let blue = 255*Math.sin(Math.PI*i/uniqueAmounts.length+2.2);
-
+            let red = 255*Math.sin(Math.PI*i/lista.length+0);
+            let green = 255*Math.sin(Math.PI*i/lista.length+1);
+            let blue = 255*Math.sin(Math.PI*i/lista.length+2.2);
 
             ctx.beginPath();
             ctx.arc(95, 80, 35, previousAngle, 2 * Math.PI * percentage + previousAngle);
@@ -531,8 +552,8 @@ var display = {
 
             let textElement = document.createElement("div");
             textElement.style.color = "rgb("+red+","+green+","+blue+")";
-            textElement.style.textShadow = "0 0 5px black";
-            textElement.innerHTML = uniqueAmounts[i] + " albums, " + countTrue + " artists";
+            textElement.style.textShadow = "0 0 5px rgb("+255-red+","+255-green+","+255-blue+")";
+            textElement.innerHTML = artist.name[lista[i]] + ", " + artist.getNumberOfAlbums(lista[i]) + " albums";
 
             e.appendChild(textElement)
         }
@@ -589,11 +610,15 @@ var display = {
         let container = document.createElement("div");
         container.id = "container-artist";
 
+        let screen = document.createElement("div");
+        screen.id = "screen-container-artist";
+
         let buffer = document.createElement("div")
         buffer.id = "buffer";
 
         e.appendChild(upperSection);
         e.appendChild(container);
+        e.appendChild(screen);
 
         let drawOrder = artist.getDrawOrder(artist.drawType);
         for (let a = 0; a < drawOrder.length; a++) {
@@ -647,7 +672,7 @@ var display = {
             editButton.style.marginRight = "5.5%";
             editButton.style.marginTop = "0.5%";
             editButton.addEventListener("click", () => {
-                artist.new(i);
+                create.new("artist", i, "edit");
             })
 
             let addButton = document.createElement("div");
@@ -657,7 +682,7 @@ var display = {
             addButton.style.fontWeight = "bold";
             addButton.innerHTML = "+";
             addButton.addEventListener("click", () => {
-                album.new(i, "new");
+                create.new("album", i, "add");
             })
 
             let removeButton = document.createElement("div");
@@ -756,7 +781,7 @@ var display = {
                     editAlbumButton.innerHTML = "✎";
                     editAlbumButton.style.opacity = "0.5";
                     editAlbumButton.addEventListener("click", () => {
-                        album.new(I);
+                        create.new("album", I, "edit");
                     })
 
                     let removeAlbumButton = document.createElement("div");
@@ -797,6 +822,7 @@ var display = {
         } else if (type == "notes") {
             display.updateNotes();
         }
+        openRight = type;
     },
     updateImport: function() {
         let e = document.getElementById("section-right");
@@ -850,11 +876,12 @@ var display = {
         })
 
         addButton.addEventListener("click", () => {
+            let previousArtist
             for (let i = 0; i < previewContainer.children.length; i++) {
                 if (previewContainer.children[i].classList.contains("artist-preview")) {
                     artist.add(previewContainer.children[i].innerHTML);
                 } else if (previewContainer.children[i].classList.contains("album-preview")) {
-                    album.add(previewContainer.children[i].children[0].innerHTML, artist.name.length-1, Number(previewContainer.children[i].children[1].innerHTML), 2000);
+                    album.add(previewContainer.children[i].children[0].innerHTML, artist.name.length-1, Number(previewContainer.children[i].children[1].innerHTML), 2000, genre.name[0]);
                 }
             }
             display.updateSectionRight("import");
@@ -875,7 +902,7 @@ var display = {
             else {display.updateExportPreview();} 
         })
     },
-    updateImportPreview: function(text, type) {
+    updateImportPreview: function(text, type) { // EI SAA LAITTAA ":", "/", "-"
         if (developerMode) {console.log(type, typeof type)};
         let e = document.getElementById("container-preview-import");
         e.innerHTML = '';
@@ -962,9 +989,12 @@ var display = {
         let exportText = "";
         for (let i = 0; i < artist.name.length; i++) {
             exportText += artist.name[i] + ":" + '<br>';
+            if (developerMode) {console.log(artist.name[i])}
             for (let a = 0; a < album.name.length; a++) {
+                if (developerMode) {console.log("scan for albums " + album.artistIndex[a] + " " + i)}
                 if (album.artistIndex[a] === i) {
                     exportText += album.name[a] + " - " + album.rating[a] + "/10" + '<br>';
+                    if (developerMode) {console.log(album.name[a])}
                 }
             }
             exportText += '<br>';
@@ -1048,7 +1078,9 @@ function getRandomInt(max) {
 function savePage() {
     var pageSave = {
         savedNotes: notes,
+        savedOpenRight: openRight,
         developerMode: developerMode,
+
         artistName: artist.name,
         artistOpen: artist.open,
 
@@ -1056,6 +1088,10 @@ function savePage() {
         albumArtistIndex: album.artistIndex,
         albumRating: album.rating,
         albumYear: album.year,
+        albumGenreIndex: album.genreIndex,
+
+        genreName: genre.name,
+        genreOpen: genre.open,
     };
     localStorage.setItem("pageSave", JSON.stringify(pageSave));
 }
@@ -1069,14 +1105,17 @@ function loadPage() {
 
     if (localStorage.getItem("pageSave") !== null) {
         //if (typeof savedPage.XXX !== "undefined") XXX = savedPage.XXX;
+
         if (typeof savedPage.savedNotes !== "undefined") notes = savedPage.savedNotes;
+        if (typeof savedPage.savedOpenRight !== "undefined") openRight = savedPage.savedOpenRight;
+        if (typeof savedPage.developerMode !== "undefined") developerMode = savedPage.developerMode;
 
         //if (typeof savedPage.XXX !== "undefined") {
         //    for ( let i = 0; i < savedPage.XXX.length; i++) {
         //        XXX[i] = savedPage.XXX[i];
         //    }
         //}
-        if (typeof savedPage.developerMode !== "undefined") developerMode = savedPage.developerMode;
+
 
         if (typeof savedPage.artistName !== "undefined") {
             for ( let i = 0; i < savedPage.artistName.length; i++) {
@@ -1103,9 +1142,24 @@ function loadPage() {
                 album.rating[i] = savedPage.albumRating[i];
             }
         }
+        if (typeof savedPage.albumGenreIndex !== "undefined") {
+            for ( let i = 0; i < savedPage.albumGenreIndex.length; i++) {
+                album.genreIndex[i] = savedPage.albumGenreIndex[i];
+            }
+        }
         if (typeof savedPage.albumYear !== "undefined") {
             for ( let i = 0; i < savedPage.albumYear.length; i++) {
                 album.year[i] = savedPage.albumYear[i];
+            }
+        }
+        if (typeof savedPage.genreName !== "undefined") {
+            for ( let i = 0; i < savedPage.genreName.length; i++) {
+                genre.name[i] = savedPage.genreName[i];
+            }
+        }
+        if (typeof savedPage.genreOpen !== "undefined") {
+            for ( let i = 0; i < savedPage.genreOpen.length; i++) {
+                genre.open[i] = savedPage.genreOpen[i];
             }
         }
     }
@@ -1118,16 +1172,15 @@ function reset () {
     location.reload();
 }
 
+function reload() {
+    savePage()
+    location.reload();
+}
+
 window.onload = () => {
     loadPage();
     display.updateUpperBar();
     display.updateStatistics();
     display.updateSectionMiddle();
-    display.updateSectionRight("import");
+    display.updateSectionRight(openRight);
 }
-
-document.addEventListener("keydown", (e) => {
-    if (e.key == "Enter" && e.target.placeholder == "Insert album name") {document.getElementsByClassName("field-UI-creation")[2].focus()};
-    if (e.key == "Enter" && e.target.placeholder == "Insert album rating") {document.getElementsByClassName("field-UI-creation")[3].focus()};
-    if (e.key == "Enter" && e.target.placeholder == "Insert album year") {document.getElementsByClassName("button-UI-creation")[0].focus()};
-})
