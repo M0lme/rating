@@ -350,6 +350,10 @@ var create = {
         creationUI.appendChild(closeButton);
         creationUI.appendChild(nameField);
 
+        if (index !== undefined && type === "edit") {
+            nameField.value = window[subject].name[index];
+        }
+
         if (subject === "album") {
             creationUI.style.width = "30%";
             creationUI.style.left = "35%";
@@ -385,10 +389,9 @@ var create = {
                 artistField.value = window[subject].artistIndex[index];
                 genreField.value = window[subject].genreIndex[index];
             }
-        }
-
-        if (index !== undefined) {
-            nameField.value = window[subject].name[index];
+            if (index !== undefined) {
+                artistField.value = index;
+            }
         }
 
         e.appendChild(creationUI);
