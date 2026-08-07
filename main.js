@@ -389,7 +389,7 @@ var create = {
                 artistField.value = window[subject].artistIndex[index];
                 genreField.value = window[subject].genreIndex[index];
             }
-            if (index !== undefined) {
+            if (index !== undefined && type === "add") {
                 artistField.value = index;
             }
         }
