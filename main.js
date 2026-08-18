@@ -156,7 +156,7 @@ var album = {
         rating = getConfirmedNumber(rating);
         genreIndex = getConfirmedNumber(genreIndex);
 
-        if (this.isDenied(name, artistIndex, rating, year, genreIndex, i)) {return};
+        if (this.isDenied(name, artistIndex, rating, year, genreIndex)) {return};
         dispatchEvent(create.closeEvent);
 
         album.name.push(name);
